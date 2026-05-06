@@ -48,11 +48,12 @@ class MT5EAAutoTester:
         return terminal_dir
     
     def create_config_file(self, ea_name, symbol, timeframe, start_date, end_date, 
-                          deposit=10000, leverage=100):
+                           deposit=10000, leverage=100):
         """
         MT5 tester için config.ini dosyası oluştur
         """
-        config = configparser.ConfigParser()
+        # HATA BURADA DÜZELTİLDİ: interpolation=None eklenerek '%' işaretli isimlerin hata vermesi engellendi.
+        config = configparser.ConfigParser(interpolation=None)
         
         # Common section
         config['Common'] = {
@@ -99,7 +100,8 @@ class MT5EAAutoTester:
         os.makedirs(config_dir, exist_ok=True)
         config_path = os.path.join(config_dir, 'common.ini')
         
-        with open(config_path, 'w') as f:
+        # DÜZELTME: Unicode karakter hatalarını önlemek için utf-8 zorlandı
+        with open(config_path, 'w', encoding='utf-8') as f:
             config.write(f)
         
         return config_path
@@ -172,7 +174,7 @@ class MT5EAAutoTester:
             print(f"❌ Hata: {str(e)}")
             return False
     
-    def find_latest_report(self, ea_name, symbol, timeframe): # ea_name eklendi
+    def find_latest_report(self, ea_name, symbol, timeframe): 
         """
         En son oluşturulan HTML raporunu bul
         """
@@ -196,7 +198,6 @@ class MT5EAAutoTester:
         
         return str(latest_report)
     
-
 
     def parse_report(self, report_path):
         """
@@ -311,14 +312,15 @@ class MT5EAAutoTester:
             print(f"   {i}. {ea.name}")
         print()
         
-       
-        
         total_tests = 0
         successful_tests = 0
         
         # Her EA için
         for ea_idx, ea_file in enumerate(ea_files, 1):
             ea_name = ea_file.stem  # .ex5 olmadan sadece isim
+            
+            # DÜZELTME: Sorunlu pipe/box karakterini temizliyoruz ki MT5 sorun yaşamasın.
+            ea_name = ea_name.replace('\u2502', '').replace('|', '').strip() 
             
             print(f"\n{'#'*70}")
             print(f"📁 EA {ea_idx}/{len(ea_files)}: {ea_name}")
@@ -440,13 +442,14 @@ if __name__ == "__main__":
     
     # AYARLAR
     MT_TERMINAL_PATH = r"C:\Program Files\MetaTrader 5\terminal64.exe"
-    EA_FOLDER = r"C:\Users\Ben\AppData\Roaming\MetaQuotes\Terminal\D0E8209F77C8CF37AD8BF550E51FF075\MQL5\Experts"
+    EA_FOLDER = r"C:\Users\Ben\AppData\Roaming\MetaQuotes\Terminal\D0E8209F77C8CF37AD8BF550E51FF075\MQL5\Experts\111"
     
     # Test parametreleri
-    SYMBOLS = ['EURUSD']
-    TIMEFRAMES = ['H1']
-    START_DATE = '2024.06.01'
-    END_DATE = '2024.07.01'  
+    SYMBOLS = ['EURUSDm']
+    # İKİNCİ DÜZELTME: tf_map listesiyle uyumlu olması için '5M' yerine 'M5' yapıldı
+    TIMEFRAMES = ['M5']
+    START_DATE = '2026.01.01'
+    END_DATE = '2026.05.01'  
     
     # Başlat
     tester = MT5EAAutoTester(MT_TERMINAL_PATH)
